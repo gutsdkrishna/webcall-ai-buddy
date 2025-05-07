@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, PhoneOff, Volume, VolumeOff, KeyRound, AlarmClock, Video, Users, User, Record, X } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Volume, VolumeOff, KeyRound, AlarmClock, Video, Users, User, FileAudio, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Waveform from './Waveform';
 import { cn } from '@/lib/utils';
@@ -201,7 +200,7 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
               <button 
                 className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
               >
-                <Record size={20} className="text-white" />
+                <FileAudio size={20} className="text-white" />
               </button>
               <span className="text-white text-xs">Record</span>
             </div>

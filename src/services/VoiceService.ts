@@ -85,8 +85,13 @@ class VoiceService {
     };
     
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = Array.from(event.results)
-        .slice(event.resultIndex)
+      // Create a custom array from the SpeechRecognitionResultList
+      const results = [];
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        results.push(event.results[i]);
+      }
+      
+      const transcript = results
         .map(result => result[0].transcript)
         .join('');
       
