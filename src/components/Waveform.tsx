@@ -32,7 +32,7 @@ const Waveform: React.FC<WaveformProps> = ({ isActive, className }) => {
   }, [isActive, bars]);
 
   return (
-    <div className={cn('flex items-center justify-center gap-1 h-24', className)}>
+    <div className={cn('flex items-center justify-center gap-1 h-12', className)}>
       {bars.map((_, index) => (
         <div
           key={index}

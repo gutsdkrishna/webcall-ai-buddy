@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, PhoneOff, Volume, VolumeOff } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Volume, VolumeOff, KeyRound, AlarmClock, Video, Users, User, Record, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Waveform from './Waveform';
 import { cn } from '@/lib/utils';
+import { Avatar } from '@/components/ui/avatar';
+import { AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface VoiceCallPanelProps {
   isOpen: boolean;
@@ -22,29 +24,20 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
   const [status, setStatus] = useState<CallStatus>(CallStatus.CONNECTING);
   const [isMuted, setIsMuted] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<{text: string, type: 'user' | 'ai'}[]>([]);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showKeypad, setShowKeypad] = useState(false);
+  const callerName = "AI Assistant";
+  const phoneNumber = "12 34 5678";
 
   // Simulate connection process
   useEffect(() => {
     if (isOpen && status === CallStatus.CONNECTING) {
       const timer = setTimeout(() => {
         setStatus(CallStatus.CONNECTED);
-        addMessage("Hello! I'm your AI customer service assistant. How can I help you today?", 'ai');
       }, 2000);
       return () => clearTimeout(timer);
     }
   }, [isOpen, status]);
-
-  const addMessage = (text: string, type: 'user' | 'ai') => {
-    setMessages(prev => [...prev, {text, type}]);
-  };
-
-  // Auto scroll to bottom of messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   const handleMuteToggle = () => {
     setIsMuted(!isMuted);
@@ -60,35 +53,52 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
       onClose();
       // Reset state for next call
       setStatus(CallStatus.CONNECTING);
-      setMessages([]);
       setIsMuted(false);
+      setShowKeypad(false);
     }, 1000);
   };
 
-  // Simulate user speaking and AI responding
-  const simulateConversation = () => {
-    if (status === CallStatus.CONNECTED || status === CallStatus.LISTENING) {
-      setStatus(CallStatus.SPEAKING);
-      addMessage("I need help with my recent order. It hasn't arrived yet.", 'user');
-      
-      setTimeout(() => {
-        setStatus(CallStatus.LISTENING);
-        setTimeout(() => {
-          setStatus(CallStatus.SPEAKING);
-          addMessage("I understand that's frustrating. Let me check the status of your order. Could you please provide your order number?", 'ai');
-          setStatus(CallStatus.LISTENING);
-        }, 2000);
-      }, 2000);
-    }
+  const toggleKeypad = () => {
+    setShowKeypad(!showKeypad);
   };
 
   if (!isOpen) {
     return null;
   }
 
+  const renderPhoneKeypad = () => {
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'];
+    return (
+      <div className="absolute inset-0 z-10 bg-[#1A1F2C] flex flex-col">
+        <div className="flex justify-between items-center p-4">
+          <span className="text-white">Keypad</span>
+          <button
+            onClick={toggleKeypad}
+            className="text-white hover:bg-gray-700 rounded-full p-1"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="flex-1 flex items-center justify-center">
+          <div className="grid grid-cols-3 gap-6">
+            {keys.map(key => (
+              <button 
+                key={key} 
+                className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center text-white text-xl font-medium hover:bg-gray-700"
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={cn(
-      "voice-panel transition-all duration-300 z-50",
+      "voice-call-panel transition-all duration-300 z-50 rounded-3xl overflow-hidden",
       isMinimized ? "minimized" : "expanded",
       status === CallStatus.ENDED && "animate-fadeOut"
     )}>
@@ -100,94 +110,128 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
           <Mic size={24} />
         </div>
       ) : (
-        <>
-          <div className="voice-panel-header bg-gray-800 text-white">
-            <div className="flex items-center">
-              <div className={cn(
-                "w-3 h-3 rounded-full mr-2",
-                status === CallStatus.CONNECTING ? "bg-yellow-400 animate-connecting" :
-                status === CallStatus.SPEAKING ? "bg-green-500" :
-                "bg-blue-300"
-              )} />
-              <span className="font-medium">
-                {status === CallStatus.CONNECTING ? "Connecting..." :
-                 status === CallStatus.SPEAKING ? "AI Speaking" :
-                 status === CallStatus.LISTENING ? "Listening..." :
-                 status === CallStatus.ENDED ? "Call Ended" :
-                 "Connected"}
-              </span>
+        <div className="h-full bg-[#1A1F2C] flex flex-col">
+          {/* Phone number and status */}
+          <div className="text-center pt-10 pb-4 px-4">
+            <div className="text-white text-xl mb-1">{phoneNumber}</div>
+            <div className="text-[#1EAEDB]">
+              {status === CallStatus.CONNECTING ? "Calling..." : 
+               status === CallStatus.CONNECTED ? "Connected" : 
+               status === CallStatus.SPEAKING ? "Speaking..." : 
+               "In call"}
             </div>
-            <div className="flex items-center space-x-2">
+          </div>
+          
+          {/* Contact avatar */}
+          <div className="flex justify-center mb-6">
+            <Avatar className="h-24 w-24 bg-gray-700">
+              <AvatarFallback className="text-4xl text-gray-400">AI</AvatarFallback>
+            </Avatar>
+          </div>
+          
+          {/* Contact name */}
+          <div className="text-white text-center text-2xl mb-10">
+            {callerName}
+          </div>
+          
+          {/* Call control buttons */}
+          <div className="grid grid-cols-3 gap-4 mb-8 px-8">
+            <div className="flex flex-col items-center gap-2">
               <button 
-                onClick={() => setIsMinimized(true)}
-                className="text-white hover:text-gray-300 transition-colors p-1"
+                className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center border border-gray-600",
+                  isMuted ? "bg-gray-700" : "bg-transparent"
+                )}
+                onClick={handleMuteToggle}
               >
-                <span className="sr-only">Minimize</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                {isMuted ? <MicOff size={20} className="text-white" /> : <Mic size={20} className="text-white" />}
+              </button>
+              <span className="text-white text-xs">Mute</span>
+            </div>
+            
+            <div className="flex flex-col items-center gap-2">
+              <button 
+                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
+                onClick={toggleKeypad}
+              >
+                <KeyRound size={20} className="text-white" />
+              </button>
+              <span className="text-white text-xs">Keypad</span>
+            </div>
+            
+            <div className="flex flex-col items-center gap-2">
+              <button 
+                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
+              >
+                <AlarmClock size={20} className="text-white" />
+              </button>
+              <span className="text-white text-xs">Reminder</span>
+            </div>
+            
+            <div className="flex flex-col items-center gap-2">
+              <button 
+                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
+              >
+                <Video size={20} className="text-white" />
+              </button>
+              <span className="text-white text-xs">Video call</span>
+            </div>
+            
+            <div className="flex flex-col items-center gap-2">
+              <button 
+                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
+              >
+                <Users size={20} className="text-white" />
+              </button>
+              <span className="text-white text-xs">Add call</span>
+            </div>
+            
+            <div className="flex flex-col items-center gap-2">
+              <button 
+                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
+              >
+                <User size={20} className="text-white" />
+              </button>
+              <span className="text-white text-xs">Contacts</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4 mb-10 px-8">
+            <div className="flex flex-col items-center gap-2">
+              <button 
+                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
+              >
+                <Record size={20} className="text-white" />
+              </button>
+              <span className="text-white text-xs">Record</span>
+            </div>
+            
+            <div className="flex flex-col items-center gap-2">
+              <button 
+                className="w-16 h-16 rounded-full flex items-center justify-center bg-red-500"
+                onClick={handleEndCall}
+              >
+                <PhoneOff size={24} className="text-white" />
               </button>
             </div>
-          </div>
-          
-          <div className="p-4 flex-grow overflow-hidden flex flex-col h-[calc(100%-64px-72px)] bg-gray-900">
-            <div className="flex-grow overflow-y-auto mb-4 space-y-3 text-white">
-              {messages.map((msg, i) => (
-                <div key={i} className={cn(
-                  "max-w-[80%] rounded-lg p-3",
-                  msg.type === 'user' ? "bg-green-700 ml-auto" : "bg-gray-700"
-                )}>
-                  {msg.text}
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
+            
+            <div className="flex flex-col items-center gap-2">
+              <button 
+                className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center border border-gray-600",
+                  !isAudioEnabled ? "bg-gray-700" : "bg-transparent"
+                )}
+                onClick={handleAudioToggle}
+              >
+                {isAudioEnabled ? <Volume size={20} className="text-white" /> : <VolumeOff size={20} className="text-white" />}
+              </button>
+              <span className="text-white text-xs">Speaker</span>
             </div>
-            
-            <Waveform 
-              isActive={status === CallStatus.SPEAKING}
-              className="my-2"
-            />
           </div>
           
-          <div className="bg-gray-800 p-4 flex justify-center items-center space-x-4 border-t border-gray-700">
-            <Button
-              variant="outline"
-              size="icon"
-              className={cn("rounded-full w-12 h-12", isMuted && "bg-red-900 text-red-100 border-red-700")}
-              onClick={handleMuteToggle}
-              aria-label={isMuted ? "Unmute microphone" : "Mute microphone"}
-            >
-              {isMuted ? <MicOff className="text-white" /> : <Mic className="text-white" />}
-            </Button>
-            
-            <Button
-              variant="destructive"
-              size="icon" 
-              className="rounded-full w-16 h-16"
-              onClick={handleEndCall}
-              aria-label="End call"
-            >
-              <PhoneOff className="w-8 h-8" />
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="icon"
-              className={cn("rounded-full w-12 h-12", !isAudioEnabled && "bg-red-900 text-red-100 border-red-700")}
-              onClick={handleAudioToggle}
-              aria-label={isAudioEnabled ? "Disable audio" : "Enable audio"}
-            >
-              {isAudioEnabled ? <Volume className="text-white" /> : <VolumeOff className="text-white" />}
-            </Button>
-            
-            {/* This button is for demo purposes only - to trigger the simulated conversation */}
-            <Button
-              variant="outline"
-              className="hidden md:block text-white bg-gray-700 border-gray-600 hover:bg-gray-600"
-              onClick={simulateConversation}
-            >
-              Say something (demo)
-            </Button>
-          </div>
-        </>
+          {/* Keypad overlay */}
+          {showKeypad && renderPhoneKeypad()}
+        </div>
       )}
     </div>
   );

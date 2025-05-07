@@ -14,7 +14,7 @@ const CallButton: React.FC<CallButtonProps> = ({ onClick, className }) => {
       onClick={onClick}
       className={cn(
         "rounded-full bg-green-500 text-white w-16 h-16 flex items-center justify-center",
-        "hover:bg-green-600 transition-colors duration-300 shadow-lg pulse-animation",
+        "hover:bg-green-600 transition-colors duration-300 shadow-lg call-pulse-animation",
         className
       )}
       aria-label="Start voice conversation"
