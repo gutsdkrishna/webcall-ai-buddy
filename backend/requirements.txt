@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+websockets
+openai
+elevenlabs
+python-dotenv

@@ -1,4 +1,3 @@
-
 // Define the WebSpeechAPI types to fix the TypeScript errors
 interface SpeechRecognitionEvent extends Event {
   resultIndex: number;
@@ -126,3 +125,68 @@ class VoiceService {
 }
 
 export default new VoiceService();
+
+// --- WebSocket Audio Streaming for AI Voice Agent ---
+export class VoiceWebSocketService {
+  private ws: WebSocket | null = null;
+  private mediaRecorder: MediaRecorder | null = null;
+  private audioContext: AudioContext | null = null;
+  private sourceNode: MediaStreamAudioSourceNode | null = null;
+  private playbackQueue: Array<Blob> = [];
+  private isPlaying = false;
+
+  connect(
+    onAudio: (audioUrl: string) => void,
+    onClose?: () => void,
+    onError?: (e: Event) => void
+  ) {
+    this.ws = new WebSocket('ws://localhost:8000/ws/audio');
+    this.ws.binaryType = 'arraybuffer';
+    this.ws.onmessage = (event) => {
+      // Received audio from backend (as bytes)
+      const audioBlob = new Blob([event.data], { type: 'audio/wav' });
+      this.playbackQueue.push(audioBlob);
+      this.playAudioQueue();
+      if (onAudio) onAudio(URL.createObjectURL(audioBlob));
+    };
+    this.ws.onclose = () => { if (onClose) onClose(); };
+    this.ws.onerror = (e) => { if (onError) onError(e); };
+  }
+
+  async startStreaming() {
+    if (!navigator.mediaDevices.getUserMedia) {
+      alert('getUserMedia not supported in this browser.');
+      return;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    this.audioContext = new window.AudioContext();
+    this.sourceNode = this.audioContext.createMediaStreamSource(stream);
+    this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    this.mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0 && this.ws?.readyState === WebSocket.OPEN) {
+        e.data.arrayBuffer().then((buf) => this.ws?.send(buf));
+      }
+    };
+    this.mediaRecorder.start(500); // send every 500ms
+  }
+
+  stopStreaming() {
+    this.mediaRecorder?.stop();
+    this.audioContext?.close();
+    this.ws?.close();
+  }
+
+  private playAudioQueue() {
+    if (this.isPlaying || this.playbackQueue.length === 0) return;
+    this.isPlaying = true;
+    const blob = this.playbackQueue.shift()!;
+    const audio = new Audio(URL.createObjectURL(blob));
+    audio.onended = () => {
+      this.isPlaying = false;
+      this.playAudioQueue();
+    };
+    audio.play();
+  }
+}
+
+export const voiceWebSocketService = new VoiceWebSocketService();

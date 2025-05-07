@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, PhoneOff, Volume, VolumeOff, MessageCircle } from 'lucide-react';
 import Waveform from './Waveform';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFallback } from '@/components/ui/avatar';
+import { voiceWebSocketService } from '@/services/VoiceService';
 
 interface VoiceCallPanelProps {
   isOpen: boolean;
@@ -45,6 +45,24 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
       return () => clearTimeout(timer);
     }
   }, [isOpen, status]);
+
+  useEffect(() => {
+    if (status === CallStatus.CONNECTED) {
+      voiceWebSocketService.connect(
+        () => { }, // Optionally handle audioUrl for waveform/feedback
+        () => setStatus(CallStatus.ENDED),
+        () => setStatus(CallStatus.ENDED)
+      );
+      voiceWebSocketService.startStreaming();
+    }
+    if (status === CallStatus.ENDED) {
+      voiceWebSocketService.stopStreaming();
+    }
+    // Clean up on unmount
+    return () => {
+      voiceWebSocketService.stopStreaming();
+    };
+  }, [status]);
 
   const handleMuteToggle = () => {
     setIsMuted(!isMuted);
@@ -87,7 +105,7 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
       isOpen && !isMinimized && "animate-scaleIn"
     )}>
       {isMinimized ? (
-        <div 
+        <div
           className="w-full h-full bg-green-500 flex items-center justify-center text-white cursor-pointer"
           onClick={() => setIsMinimized(false)}
         >
@@ -99,26 +117,26 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
           <div className="text-center pt-10 pb-4 px-4 animate-fadeIn">
             <div className="text-white text-xl mb-1">{phoneNumber}</div>
             <div className="text-[#1EAEDB]">
-              {status === CallStatus.CONNECTING ? "Calling..." : 
-               status === CallStatus.CONNECTED ? "Connected" : 
-               status === CallStatus.SPEAKING ? "Speaking..." : 
-               status === CallStatus.LISTENING ? "Listening..." : 
-               "In call"}
+              {status === CallStatus.CONNECTING ? "Calling..." :
+                status === CallStatus.CONNECTED ? "Connected" :
+                  status === CallStatus.SPEAKING ? "Speaking..." :
+                    status === CallStatus.LISTENING ? "Listening..." :
+                      "In call"}
             </div>
           </div>
-          
+
           {/* Contact avatar */}
           <div className="flex justify-center mb-6 animate-fadeIn" style={{ animationDelay: "0.1s" }}>
             <Avatar className="h-24 w-24 bg-gray-700">
               <AvatarFallback className="text-4xl text-gray-400">AI</AvatarFallback>
             </Avatar>
           </div>
-          
+
           {/* Contact name */}
           <div className="text-white text-center text-2xl mb-8 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
             {callerName}
           </div>
-          
+
           {/* Question interface */}
           <div className="flex-1 px-6 mb-6 overflow-y-auto animate-fadeIn" style={{ animationDelay: "0.3s" }}>
             {selectedQuestion ? (
@@ -134,8 +152,8 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
               <div className="space-y-3">
                 <h3 className="text-white text-center mb-4">What would you like to know?</h3>
                 {questions.map((question, index) => (
-                  <button 
-                    key={index} 
+                  <button
+                    key={index}
                     className="w-full bg-gray-800 hover:bg-gray-700 text-white text-left p-4 rounded-lg flex items-center transition-colors animate-fadeIn"
                     style={{ animationDelay: `${0.4 + index * 0.1}s` }}
                     onClick={() => handleQuestionSelect(question)}
@@ -147,11 +165,11 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
               </div>
             )}
           </div>
-          
+
           {/* Call control buttons - only mute and speaker */}
           <div className="grid grid-cols-3 gap-4 mb-10 px-8 animate-fadeIn" style={{ animationDelay: "0.6s" }}>
             <div className="flex flex-col items-center gap-2">
-              <button 
+              <button
                 className={cn(
                   "w-12 h-12 rounded-full flex items-center justify-center border border-gray-600",
                   isMuted ? "bg-gray-700" : "bg-transparent"
@@ -162,18 +180,18 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
               </button>
               <span className="text-white text-xs">Mute</span>
             </div>
-            
+
             <div className="flex flex-col items-center gap-2">
-              <button 
+              <button
                 className="w-16 h-16 rounded-full flex items-center justify-center bg-red-500 hover:bg-red-600 transition-colors"
                 onClick={handleEndCall}
               >
                 <PhoneOff size={24} className="text-white" />
               </button>
             </div>
-            
+
             <div className="flex flex-col items-center gap-2">
-              <button 
+              <button
                 className={cn(
                   "w-12 h-12 rounded-full flex items-center justify-center border border-gray-600",
                   !isAudioEnabled ? "bg-gray-700" : "bg-transparent"
