@@ -94,14 +94,14 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
     )}>
       {isMinimized ? (
         <div 
-          className="w-full h-full bg-blue-500 flex items-center justify-center text-white cursor-pointer"
+          className="w-full h-full bg-green-500 flex items-center justify-center text-white cursor-pointer"
           onClick={() => setIsMinimized(false)}
         >
           <Mic size={24} />
         </div>
       ) : (
         <>
-          <div className="voice-panel-header">
+          <div className="voice-panel-header bg-gray-800 text-white">
             <div className="flex items-center">
               <div className={cn(
                 "w-3 h-3 rounded-full mr-2",
@@ -120,7 +120,7 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
             <div className="flex items-center space-x-2">
               <button 
                 onClick={() => setIsMinimized(true)}
-                className="text-white hover:text-blue-200 transition-colors p-1"
+                className="text-white hover:text-gray-300 transition-colors p-1"
               >
                 <span className="sr-only">Minimize</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -128,12 +128,12 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
           
-          <div className="p-4 flex-grow overflow-hidden flex flex-col h-[calc(100%-64px-72px)]">
-            <div className="flex-grow overflow-y-auto mb-4 space-y-3">
+          <div className="p-4 flex-grow overflow-hidden flex flex-col h-[calc(100%-64px-72px)] bg-gray-900">
+            <div className="flex-grow overflow-y-auto mb-4 space-y-3 text-white">
               {messages.map((msg, i) => (
                 <div key={i} className={cn(
                   "max-w-[80%] rounded-lg p-3",
-                  msg.type === 'user' ? "bg-blue-100 ml-auto" : "bg-gray-100"
+                  msg.type === 'user' ? "bg-green-700 ml-auto" : "bg-gray-700"
                 )}>
                   {msg.text}
                 </div>
@@ -147,41 +147,41 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
             />
           </div>
           
-          <div className="bg-gray-50 p-4 flex justify-center items-center space-x-4 border-t">
+          <div className="bg-gray-800 p-4 flex justify-center items-center space-x-4 border-t border-gray-700">
             <Button
               variant="outline"
               size="icon"
-              className={cn("rounded-full w-12 h-12", isMuted && "bg-red-50 text-red-500 border-red-200")}
+              className={cn("rounded-full w-12 h-12", isMuted && "bg-red-900 text-red-100 border-red-700")}
               onClick={handleMuteToggle}
               aria-label={isMuted ? "Unmute microphone" : "Mute microphone"}
             >
-              {isMuted ? <MicOff /> : <Mic />}
+              {isMuted ? <MicOff className="text-white" /> : <Mic className="text-white" />}
             </Button>
             
             <Button
               variant="destructive"
               size="icon" 
-              className="rounded-full w-12 h-12"
+              className="rounded-full w-16 h-16"
               onClick={handleEndCall}
               aria-label="End call"
             >
-              <PhoneOff />
+              <PhoneOff className="w-8 h-8" />
             </Button>
             
             <Button
               variant="outline"
               size="icon"
-              className={cn("rounded-full w-12 h-12", !isAudioEnabled && "bg-red-50 text-red-500 border-red-200")}
+              className={cn("rounded-full w-12 h-12", !isAudioEnabled && "bg-red-900 text-red-100 border-red-700")}
               onClick={handleAudioToggle}
               aria-label={isAudioEnabled ? "Disable audio" : "Enable audio"}
             >
-              {isAudioEnabled ? <Volume /> : <VolumeOff />}
+              {isAudioEnabled ? <Volume className="text-white" /> : <VolumeOff className="text-white" />}
             </Button>
             
             {/* This button is for demo purposes only - to trigger the simulated conversation */}
             <Button
               variant="outline"
-              className="hidden md:block"
+              className="hidden md:block text-white bg-gray-700 border-gray-600 hover:bg-gray-600"
               onClick={simulateConversation}
             >
               Say something (demo)

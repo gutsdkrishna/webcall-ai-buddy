@@ -40,6 +40,7 @@ const Waveform: React.FC<WaveformProps> = ({ isActive, className }) => {
           style={{
             height: `${isActive ? heights[index] : 4}px`,
             opacity: isActive ? 0.7 + Math.random() * 0.3 : 0.3,
+            backgroundColor: '#22c55e', // Green color to match the call button
           }}
         />
       ))}
