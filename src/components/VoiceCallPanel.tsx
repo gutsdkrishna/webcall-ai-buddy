@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, PhoneOff, Volume, VolumeOff, KeyRound, AlarmClock, Video, Users, User, FileAudio, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
+import React, { useState, useEffect } from 'react';
+import { Mic, MicOff, PhoneOff, Volume, VolumeOff, MessageCircle } from 'lucide-react';
 import Waveform from './Waveform';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
-import { AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { AvatarFallback } from '@/components/ui/avatar';
 
 interface VoiceCallPanelProps {
   isOpen: boolean;
@@ -24,9 +24,17 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [showKeypad, setShowKeypad] = useState(false);
   const callerName = "AI Assistant";
   const phoneNumber = "12 34 5678";
+  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
+
+  // Sample questions for the interface
+  const questions = [
+    "What are your business hours?",
+    "How do I reset my password?",
+    "Where can I find pricing information?",
+    "How do I contact customer support?"
+  ];
 
   // Simulate connection process
   useEffect(() => {
@@ -53,53 +61,30 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
       // Reset state for next call
       setStatus(CallStatus.CONNECTING);
       setIsMuted(false);
-      setShowKeypad(false);
+      setSelectedQuestion(null);
     }, 1000);
   };
 
-  const toggleKeypad = () => {
-    setShowKeypad(!showKeypad);
+  const handleQuestionSelect = (question: string) => {
+    setSelectedQuestion(question);
+    // Here you would typically send the question to your AI service
+    // For now, we'll just simulate a response by changing status
+    setStatus(CallStatus.SPEAKING);
+    setTimeout(() => {
+      setStatus(CallStatus.LISTENING);
+    }, 3000);
   };
 
   if (!isOpen) {
     return null;
   }
 
-  const renderPhoneKeypad = () => {
-    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'];
-    return (
-      <div className="absolute inset-0 z-10 bg-[#1A1F2C] flex flex-col">
-        <div className="flex justify-between items-center p-4">
-          <span className="text-white">Keypad</span>
-          <button
-            onClick={toggleKeypad}
-            className="text-white hover:bg-gray-700 rounded-full p-1"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        
-        <div className="flex-1 flex items-center justify-center">
-          <div className="grid grid-cols-3 gap-6">
-            {keys.map(key => (
-              <button 
-                key={key} 
-                className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center text-white text-xl font-medium hover:bg-gray-700"
-              >
-                {key}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className={cn(
       "voice-call-panel transition-all duration-300 z-50 rounded-3xl overflow-hidden",
       isMinimized ? "minimized" : "expanded",
-      status === CallStatus.ENDED && "animate-fadeOut"
+      status === CallStatus.ENDED ? "animate-fadeOut" : "animate-slideIn",
+      isOpen && !isMinimized && "animate-scaleIn"
     )}>
       {isMinimized ? (
         <div 
@@ -111,30 +96,60 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
       ) : (
         <div className="h-full bg-[#1A1F2C] flex flex-col">
           {/* Phone number and status */}
-          <div className="text-center pt-10 pb-4 px-4">
+          <div className="text-center pt-10 pb-4 px-4 animate-fadeIn">
             <div className="text-white text-xl mb-1">{phoneNumber}</div>
             <div className="text-[#1EAEDB]">
               {status === CallStatus.CONNECTING ? "Calling..." : 
                status === CallStatus.CONNECTED ? "Connected" : 
                status === CallStatus.SPEAKING ? "Speaking..." : 
+               status === CallStatus.LISTENING ? "Listening..." : 
                "In call"}
             </div>
           </div>
           
           {/* Contact avatar */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-6 animate-fadeIn" style={{ animationDelay: "0.1s" }}>
             <Avatar className="h-24 w-24 bg-gray-700">
               <AvatarFallback className="text-4xl text-gray-400">AI</AvatarFallback>
             </Avatar>
           </div>
           
           {/* Contact name */}
-          <div className="text-white text-center text-2xl mb-10">
+          <div className="text-white text-center text-2xl mb-8 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
             {callerName}
           </div>
           
-          {/* Call control buttons */}
-          <div className="grid grid-cols-3 gap-4 mb-8 px-8">
+          {/* Question interface */}
+          <div className="flex-1 px-6 mb-6 overflow-y-auto animate-fadeIn" style={{ animationDelay: "0.3s" }}>
+            {selectedQuestion ? (
+              <div className="bg-gray-800 p-4 rounded-lg mb-4">
+                <p className="text-white"><span className="font-semibold">You asked:</span> {selectedQuestion}</p>
+                {status === CallStatus.SPEAKING && (
+                  <div className="flex items-center justify-center mt-4">
+                    <Waveform height={30} />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <h3 className="text-white text-center mb-4">What would you like to know?</h3>
+                {questions.map((question, index) => (
+                  <button 
+                    key={index} 
+                    className="w-full bg-gray-800 hover:bg-gray-700 text-white text-left p-4 rounded-lg flex items-center transition-colors animate-fadeIn"
+                    style={{ animationDelay: `${0.4 + index * 0.1}s` }}
+                    onClick={() => handleQuestionSelect(question)}
+                  >
+                    <MessageCircle size={18} className="mr-3 text-[#1EAEDB]" />
+                    {question}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Call control buttons - only mute and speaker */}
+          <div className="grid grid-cols-3 gap-4 mb-10 px-8 animate-fadeIn" style={{ animationDelay: "0.6s" }}>
             <div className="flex flex-col items-center gap-2">
               <button 
                 className={cn(
@@ -150,64 +165,7 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
             
             <div className="flex flex-col items-center gap-2">
               <button 
-                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
-                onClick={toggleKeypad}
-              >
-                <KeyRound size={20} className="text-white" />
-              </button>
-              <span className="text-white text-xs">Keypad</span>
-            </div>
-            
-            <div className="flex flex-col items-center gap-2">
-              <button 
-                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
-              >
-                <AlarmClock size={20} className="text-white" />
-              </button>
-              <span className="text-white text-xs">Reminder</span>
-            </div>
-            
-            <div className="flex flex-col items-center gap-2">
-              <button 
-                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
-              >
-                <Video size={20} className="text-white" />
-              </button>
-              <span className="text-white text-xs">Video call</span>
-            </div>
-            
-            <div className="flex flex-col items-center gap-2">
-              <button 
-                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
-              >
-                <Users size={20} className="text-white" />
-              </button>
-              <span className="text-white text-xs">Add call</span>
-            </div>
-            
-            <div className="flex flex-col items-center gap-2">
-              <button 
-                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
-              >
-                <User size={20} className="text-white" />
-              </button>
-              <span className="text-white text-xs">Contacts</span>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4 mb-10 px-8">
-            <div className="flex flex-col items-center gap-2">
-              <button 
-                className="w-12 h-12 rounded-full flex items-center justify-center border border-gray-600 bg-transparent"
-              >
-                <FileAudio size={20} className="text-white" />
-              </button>
-              <span className="text-white text-xs">Record</span>
-            </div>
-            
-            <div className="flex flex-col items-center gap-2">
-              <button 
-                className="w-16 h-16 rounded-full flex items-center justify-center bg-red-500"
+                className="w-16 h-16 rounded-full flex items-center justify-center bg-red-500 hover:bg-red-600 transition-colors"
                 onClick={handleEndCall}
               >
                 <PhoneOff size={24} className="text-white" />
@@ -227,9 +185,6 @@ const VoiceCallPanel: React.FC<VoiceCallPanelProps> = ({ isOpen, onClose }) => {
               <span className="text-white text-xs">Speaker</span>
             </div>
           </div>
-          
-          {/* Keypad overlay */}
-          {showKeypad && renderPhoneKeypad()}
         </div>
       )}
     </div>
