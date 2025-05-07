@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -70,25 +71,37 @@ export default {
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
+				},
+				'waveform': {
+					'0%, 100%': { height: '4px' },
+					'50%': { height: '20px' }
+				},
+				'connecting': {
+					'0%, 100%': { opacity: '0.6' },
+					'50%': { opacity: '1' }
+				},
+				'fadeIn': {
+					from: { opacity: '0' },
+					to: { opacity: '1' }
+				},
+				'fadeOut': {
+					from: { opacity: '1' },
+					to: { opacity: '0' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'waveform': 'waveform 1s ease-in-out infinite',
+				'connecting': 'connecting 1.5s infinite',
+				'fadeIn': 'fadeIn 0.3s ease-in-out',
+				'fadeOut': 'fadeOut 0.3s ease-in-out'
 			}
 		}
 	},
